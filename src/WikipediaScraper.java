@@ -44,7 +44,7 @@ public class WikipediaScraper {
         Pattern p = Pattern.compile("href=\"/wiki/(?!.*:)(.*?)\"");
         String rawHTML = page.getRawHTML();
         Matcher m = p.matcher(rawHTML);
-        while (!m.hitEnd() && links.size() < 35) {
+        while (!m.hitEnd() && links.size() < 25) {
 //        while (!m.hitEnd() && page.outDegree() < 50) {
             if (m.find()) {
                 String match = rawHTML.substring(m.start(), m.end());

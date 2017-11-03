@@ -1,10 +1,8 @@
-import java.io.*;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 public class WebScraperMain {
+    private static Set<String> pages = new HashSet<>();
     public static void main(String[] args) {
         WikipediaScraper s = new WikipediaScraper();
 //        String page1 = "/wiki/Ethereum";
@@ -15,23 +13,39 @@ public class WebScraperMain {
 
         WikiPage p1 = new WikiPage("/wiki/Ethereum");
         WikiPage p2 = new WikiPage("/wiki/Floorball");
+//        pages.add(p1);
+//        pages.add(p2);
         try {
             s.scrape(p1);
             s.extractInternalLinks(p1);
             Set<String> links = p1.getLinks();
+            System.out.println("Links level 1: " + links.size());
+//            Set<String> nextLevel = crawlLinks(links);
             Set<String> nextLevel = new HashSet<>();
             for (String link : links) {
-//                WikiPage page = graph.addPageFor(link);
                 WikiPage page = new WikiPage(link);
                 s.scrape(page);
-//                graph.addLinkBetween(p1.getLink(), link);
-//                Set<String> subLinks = s.extractInternalLinks(page);
                 s.extractInternalLinks(page);
                 nextLevel.addAll(page.getLinks());
+                pages.add(page.getLink());
             }
+            System.out.println("Next level return size: " + nextLevel.size());
+            System.out.println("Pages level 1: " + pages.size());
+            crawlLinks(nextLevel);
+//            Set<String> nextLevel = new HashSet<>();
+//            for (String link : links) {
+////                WikiPage page = graph.addPageFor(link);
+//                WikiPage page = new WikiPage(link);
+//                s.scrape(page);
+////                graph.addLinkBetween(p1.getLink(), link);
+////                Set<String> subLinks = s.extractInternalLinks(page);
+//                s.extractInternalLinks(page);
+//                nextLevel.addAll(page.getLinks());
+//            }
 
             links.addAll(nextLevel);
-            System.out.println(links.size());
+            System.out.println("Links final: " + links.size());
+            System.out.println("Pages final: " + pages.size());
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -54,6 +68,21 @@ public class WebScraperMain {
 //        } catch (Exception e) {
 //            e.printStackTrace();
 //        }
+    }
+
+    private static void crawlLinks(Set<String> links) throws Exception {
+        WikipediaScraper s = new WikipediaScraper();
+//        Set<String> nextLevel = new HashSet<>();
+        for (String link : links) {
+            WikiPage page = new WikiPage(link);
+            s.scrape(page);
+//            s.extractInternalLinks(page);
+//            nextLevel.addAll(page.getLinks());
+            pages.add(page.getLink());
+        }
+//        System.out.println("Next level: " + nextLevel.size());
+        System.out.println("Next level pages: " + pages.size());
+//        return nextLevel;
     }
 //
 //    private static void crawlLinks(Set<String> links, String basePage) {
