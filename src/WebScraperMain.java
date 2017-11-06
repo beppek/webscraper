@@ -1,3 +1,7 @@
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -12,7 +16,9 @@ public class WebScraperMain {
 //        WikiPage p2 = graph.addPageFor("/wiki/Floorball");
 
         WikiPage p1 = new WikiPage("/wiki/Ethereum");
+        p1.setRootPage(p1.getTitle());
         WikiPage p2 = new WikiPage("/wiki/Floorball");
+        p2.setRootPage(p2.getTitle());
 //        pages.add(p1);
 //        pages.add(p2);
         try {
@@ -21,17 +27,20 @@ public class WebScraperMain {
             Set<String> links = p1.getLinks();
             System.out.println("Links level 1: " + links.size());
 //            Set<String> nextLevel = crawlLinks(links);
-            Set<String> nextLevel = new HashSet<>();
+            Set<String> page1Links = new HashSet<>();
+            Set<String> page2Links = new HashSet<>();
             for (String link : links) {
                 WikiPage page = new WikiPage(link);
+                page.setRootPage(p1.getTitle());
                 s.scrape(page);
                 s.extractInternalLinks(page);
-                nextLevel.addAll(page.getLinks());
+                page1Links.addAll(page.getLinks());
                 pages.add(page.getLink());
+                savePage(page);
             }
-            System.out.println("Next level return size: " + nextLevel.size());
+            System.out.println("Next level return size: " + page1Links.size());
             System.out.println("Pages level 1: " + pages.size());
-            crawlLinks(nextLevel);
+            crawlLinks(page1Links, p1.getTitle());
 //            Set<String> nextLevel = new HashSet<>();
 //            for (String link : links) {
 ////                WikiPage page = graph.addPageFor(link);
@@ -43,7 +52,7 @@ public class WebScraperMain {
 //                nextLevel.addAll(page.getLinks());
 //            }
 
-            links.addAll(nextLevel);
+            links.addAll(page1Links);
             System.out.println("Links final: " + links.size());
             System.out.println("Pages final: " + pages.size());
 
@@ -70,15 +79,17 @@ public class WebScraperMain {
 //        }
     }
 
-    private static void crawlLinks(Set<String> links) throws Exception {
+    private static void crawlLinks(Set<String> links, String rootPage) throws Exception {
         WikipediaScraper s = new WikipediaScraper();
 //        Set<String> nextLevel = new HashSet<>();
         for (String link : links) {
             WikiPage page = new WikiPage(link);
             s.scrape(page);
+            page.setRootPage(rootPage);
 //            s.extractInternalLinks(page);
 //            nextLevel.addAll(page.getLinks());
             pages.add(page.getLink());
+            savePage(page);
         }
 //        System.out.println("Next level: " + nextLevel.size());
         System.out.println("Next level pages: " + pages.size());
@@ -106,6 +117,32 @@ public class WebScraperMain {
 //        }
 //        System.out.println("Line 46: " + nextLevelLinks.size());
 //    }
+
+    private static void savePage(WikiPage page) {
+        String dirPath = "files/" + page.getRootPage() + "/raw_content/";
+        File dir = new File(dirPath);
+        if (!dir.exists()) {
+            dir.mkdirs();
+        }
+
+        File file = new File(dirPath + page.getTitle() + ".txt");
+
+        try {
+            if (!file.exists()) {
+
+                file.createNewFile();
+            }
+            FileWriter fw = new FileWriter(file.getAbsoluteFile());
+            BufferedWriter bw = new BufferedWriter(fw);
+            bw.write(page.getRawHTML());
+            bw.close();
+        } catch (IOException e) {
+            System.out.println("An error occured while creating this file:");
+            System.out.println(page.getTitle());
+            System.out.println(file.getAbsolutePath());
+            e.printStackTrace();
+        }
+    }
 //
 //    private static void savePage(String rawHTML, String basePage, String title) {
 //        String dirPath = "files/" + basePage + "/raw_content/";
