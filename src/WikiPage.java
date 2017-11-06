@@ -6,6 +6,7 @@ public class WikiPage {
     private String title;
     private String rawHTML;
     private String link;
+    private String rootPage;
 //    private Set<WikiPage> inboundLinks;
 //    private Set<WikiPage> outboundLinks;
     private Set<String> links;
@@ -47,6 +48,13 @@ public class WikiPage {
         return this.links;
     }
 
+    public String getRootPage() {
+        return this.rootPage;
+    }
+
+    public void setRootPage(String rootPage) {
+        this.rootPage = rootPage;
+    }
 //    public void addInboundLink(WikiPage page) {
 //        inboundLinks.add(page);
 //    }
