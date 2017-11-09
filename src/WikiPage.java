@@ -1,5 +1,7 @@
 import java.util.HashSet;
 import java.util.Set;
+import net.htmlparser.jericho.Source;
+import net.htmlparser.jericho.Renderer;
 
 public class WikiPage {
     private String title;
@@ -49,5 +51,48 @@ public class WikiPage {
 
     public void setRootPage(String rootPage) {
         this.rootPage = rootPage;
+    }
+
+    String getTextContent() {
+        Source src = new Source(rawHTML);
+        Renderer renderer = new Renderer(src);
+        return preprocessText(renderer.toString());
+    }
+
+    String getBagOfWords() {
+        String text = getTextContent();
+        text = text.replaceAll(" — ", "");
+        text = text.replaceAll(" - ", "");
+        text = text.replaceAll("&", "");
+        text = text.replaceAll("\\+ ", "");
+        text = text.replaceAll("\\d", "");
+        text = text.replaceAll(" +", " ");
+        return text;
+    }
+
+    private String preprocessText(String text) {
+        text = text.toLowerCase();
+        text = text.replaceAll("\r", " ");
+        text = text.replaceAll("\n", " ");
+        text = text.replaceAll("\\<.*?>", "");
+        text = text.replaceAll("\\[.*?\\]", "");
+        text = text.replaceAll("\\d{4}-\\d{2}-\\d{2}", "");
+        text = text.replaceAll("\\.", "");
+        text = text.replaceAll(",", "");
+        text = text.replaceAll("\\?", "");
+        text = text.replaceAll(";", "");
+        text = text.replaceAll("\"", "");
+        text = text.replaceAll("/", " ");
+        text = text.replaceAll(":", "");
+        text = text.replaceAll("\\(", " ");
+        text = text.replaceAll("\\*", "");
+        text = text.replaceAll("_", "");
+        text = text.replaceAll("!", "");
+        text = text.replaceAll("#", "");
+        text = text.replaceAll("\\)", " ");
+        text = text.replaceAll("\\^", "");
+        text = text.replaceAll("\\|", "");
+        text = text.replaceAll("=", "");
+        return text;
     }
 }

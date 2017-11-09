@@ -11,30 +11,17 @@ public class WebScraperMain {
         WikipediaScraper s = new WikipediaScraper();
 
         WikiPage p1 = new WikiPage("/wiki/Ethereum");
-        p1.setRootPage(p1.getTitle());
         WikiPage p2 = new WikiPage("/wiki/Floorball");
+        p1.setRootPage(p1.getTitle());
         p2.setRootPage(p2.getTitle());
         try {
             s.scrape(p1);
             s.scrape(p2);
-            s.extractInternalLinks(p2);
             s.extractInternalLinks(p1);
-            Set<String> links = p1.getLinks();
-            links.addAll(p2.getLinks());
-            Set<String> page1Links = new HashSet<>();
-            Set<String> page2Links = new HashSet<>();
-//            for (String link : p1.getLinks()) {
-//                WikiPage page = new WikiPage(link);
-//                page.setRootPage(p1.getTitle());
-//                s.scrape(page);
-//                s.extractInternalLinks(page);
-//                page1Links.addAll(page.getLinks());
-//                pages.add(page.getLink());
-//                savePage(page);
-//            }
-//            crawlLinks(page1Links, p1.getTitle());
-            crawlLinks(p1);
-            links.addAll(page1Links);
+            s.extractInternalLinks(p2);
+            Set<String> links = new HashSet<>();
+            links.addAll(crawlLinks(p1));
+            links.addAll(crawlLinks(p2));
             System.out.println("Links final: " + links.size());
             System.out.println("Pages final: " + pages.size());
 
@@ -43,39 +30,47 @@ public class WebScraperMain {
         }
     }
 
-//    private static void crawlLinks(Set<String> links, String rootPage) throws Exception {
-    private static void crawlLinks(WikiPage p) throws Exception {
+    private static Set<String> crawlLinks(WikiPage root) throws Exception {
+        int depth = 2;
         WikipediaScraper s = new WikipediaScraper();
-        Set<String> links = new HashSet<>();
-        for (String link : p.getLinks()) {
-            WikiPage page = new WikiPage(link);
-            page.setRootPage(page.getTitle());
-            s.scrape(page);
-//            s.extractInternalLinks(page);
-//            links.addAll(page.getLinks());
-            pages.add(page.getLink());
-            savePage(page);
+        Set<String> links = root.getLinks();
+        Set<String> pageLinks = new HashSet<>();
+        pageLinks.addAll(links);
+        for (int i = 0; i < depth; i++) {
+            for (String link : pageLinks) {
+                if (!pages.contains(link)) {
+                    WikiPage page = new WikiPage(link);
+                    page.setRootPage(root.getTitle());
+                    s.scrape(page);
+                    //Only extract links from the first level
+                    if (i == 0) {
+                        s.extractInternalLinks(page);
+                        links.addAll(page.getLinks());
+                    }
+                    savePage(page);
+                    pages.add(page.getLink());
+                }
+            }
+            pageLinks = links;
         }
-//        for (String link : links) {
-//            WikiPage page = new WikiPage(link);
-//            s.scrape(page);
-//            page.setRootPage(rootPage);
-//            pages.add(page.getLink());
-//            savePage(page);
-//        }
-        System.out.println("Next level pages: " + pages.size());
-//        return links;
+        System.out.println(root.getTitle() + " has " + links.size() + " links.");
+        return links;
     }
 
     private static void savePage(WikiPage page) {
-        String dirPath = "files/" + page.getRootPage() + "/raw_content/";
+        saveFile(page, "html");
+        saveFile(page, "content");
+        saveFile(page, "words");
+        saveFile(page, "links");
+    }
+
+    private static void saveFile(WikiPage page, String path) {
+        String dirPath = "data/" + path + "/" + page.getRootPage() + "/";
         File dir = new File(dirPath);
         if (!dir.exists()) {
             dir.mkdirs();
         }
-
         File file = new File(dirPath + page.getTitle() + ".txt");
-
         try {
             if (!file.exists()) {
 
@@ -83,7 +78,23 @@ public class WebScraperMain {
             }
             FileWriter fw = new FileWriter(file.getAbsoluteFile());
             BufferedWriter bw = new BufferedWriter(fw);
-            bw.write(page.getRawHTML());
+            switch (path) {
+                case "html":
+                    bw.write(page.getRawHTML());
+                    break;
+                case "content":
+                    bw.write(page.getTextContent());
+                    break;
+                case "words":
+                    bw.write(page.getBagOfWords());
+                    break;
+                case "links":
+                    for (String link : page.getLinks()) {
+                        bw.write(link);
+                        bw.newLine();
+                    }
+                    break;
+            }
             bw.close();
         } catch (IOException e) {
             System.out.println("An error occured while creating this file:");
