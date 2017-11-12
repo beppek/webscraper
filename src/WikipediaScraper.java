@@ -6,6 +6,12 @@ import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+/**
+ * Wikipedia scraper
+ * This program scrapes a page on wikipedia and extracts internal links from the page
+ * The limit for number of links to extract from each page is set in the constructor.
+ * If no argument is supplied the default link cap is 25.
+ * */
 class WikipediaScraper {
 
     private int linkCap;
@@ -32,7 +38,8 @@ class WikipediaScraper {
         while ((line = reader.readLine()) != null) {
             contents.append(line).append("\n");
         }
-        page.setRawHTML(contents.toString());
+        page.setContent(contents.toString());
+        extractInternalLinks(page);
     }
 
     /**
@@ -40,7 +47,7 @@ class WikipediaScraper {
      * @param page - WikiPage instance representing the page from which to extract the links
      * NOTE: Page should be initialized with rawHTML content before links can be extracted
      * */
-    void extractInternalLinks(WikiPage page) {
+    private void extractInternalLinks(WikiPage page) {
         Set<String> links = new HashSet<>();
         String internalLinkPattern = "href=\"/wiki/(?!.*:)(.*?)\"";
         Pattern p = Pattern.compile(internalLinkPattern);
